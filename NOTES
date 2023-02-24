@@ -22,7 +22,12 @@
 // two bytes = transaction ID                                       a3 bd
 // two bytes = flags (first bit query/response, next 4 opcode, 1 bit authorative answer, 1 bit truncated, 1 bit RD: recursion (desired?) (Optional to support),1 bit RA: Recursion (Available?) 3 bit reserved (explained below), 4 bit RCODE
 // flags that are response only: AA: Authoritative Awnser, RCODE
-//  Reserved bits deal with extensions (?) such as DNSSEC
+//  Reserved bits deal with extensions (?) such as DNSSEC where now the 3 bits are as follows
+//      Z bit: Still reserved
+//      AD bit: Authoritive Data bit: Server has authenticated that all transactions needed to respond with an awnser and authority bits have
+//          been authenticated by the server.
+//      CD bit: Checking Disabled bit: This means that response can be non authenticated, in a situation where the
+//          response might be pending and not authoritative.
 //                                                                  01 20
 // two bytes = questions (amount of queries asked)                  00 01
 // two bytes = awnser RR's                                          00 01
