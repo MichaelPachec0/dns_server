@@ -75,8 +75,8 @@ enum Opcode {
 
 impl Flags {
     // TODO: Custom Error (possibly use anyhow?), or leave as string?
-    fn new(flags: &u8) -> Result<Self, String> {
-        let up_opcode = Flags::format_opcode(flags);
+    fn new(flags: &[u8]) -> Result<Self, String> {
+        let up_opcode = Flags::format_opcode(&flags[0]);
         //Iterates through possible bit values that Opcode can be,
         let opcode = (0..15)
             .into_iter()
@@ -85,7 +85,7 @@ impl Flags {
             .and_then(Opcode::from_u8)
             // TODO: Decide if multiple conditions are necessary, or if an optional is better.
             .ok_or_else(|| format!("DNS_TYPE: INVALID TYPE: {up_opcode}, AS BITS: {up_opcode:08b}"))?;
-        let dns_type = if bitflags_check(0, flags) {
+        let dns_type = if bitflags_check(0, &flags[0]) {
             QRBit::Response
         } else {
             QRBit::Query
@@ -93,8 +93,8 @@ impl Flags {
         Ok(Self {
             dns_type,
             opcode,
-            truncated: false,
-            recursion: false,
+            truncated: bitflags_check(6, &flags[0]),
+            recursion: bitflags_check(7, &flags[0]),
             ad_bit: false,
             non_auth: false,
         })
