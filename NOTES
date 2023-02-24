@@ -1,0 +1,34 @@
+// Initial notes from RFC5395, RFC2136, RFC1035
+// Rest from: https://powerdns.org/hello-dns/
+//           0     Query                              [RFC1035] ?
+//           1     IQuery (Inverse Query, Obsolete)   [RFC3425] Do not need to implement
+//           2     Status                             [RFC1035] ?
+//           3     available for assignment                     Do not need to implement
+//           4     Notify                             [RFC1996] ?
+//           5     Update                             [RFC2136] ?
+//          6-15   available for assignment
+// RAW [
+// DA, C5,
+// 01, 20,
+// 00, 01,
+// 00, 00,
+// 00, 00,
+// 00, 01,
+// 06, 67, 6F, 6F, 67, 6C, 65, 03, 63, 6F, 6D, 00,
+// 00, 01,
+// 00, 01,
+// 00, 00, 29, 04, D0, 00, 00, 00, 00, 00, 0C, 00, 0A, 00, 08, 2F, E5, B0, EA, 29, E3, D3, 62]
+// slice is a dns packet
+// two bytes = transaction ID                                       a3 bd
+// two bytes = flags (first bit query/response, next 4 opcode, 1 bit authorative answer, 1 bit truncated, 1 bit RD: recursion (desired?) (Optional to support),1 bit RA: Recursion (Available?) 3 bit reserved (explained below), 4 bit RCODE
+// flags that are response only: AA: Authoritative Awnser, RCODE
+//  Reserved bits deal with extensions (?) such as DNSSEC
+//                                                                  01 20
+// two bytes = questions (amount of queries asked)                  00 01
+// two bytes = awnser RR's                                          00 01
+// two bytes = authority RR's                                       00 00
+// two bytes = additional RR's                                      00 01
+// Queries 13 bytes can be variable
+//   name: variable, null terminated (ends in 00)
+//   type: two bytes, 00 01 type A                                  00 01
+//   class: IN                                                      00 01
