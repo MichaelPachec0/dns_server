@@ -101,9 +101,7 @@ impl Flags {
     }
     // truncates the first bit and the last 3 bits, this way we only have the opcode bits
     fn format_opcode(flag_bit: &u8) -> u8 {
-        let flag_bit = flag_bit >> 1;
-        let flag_bit = flag_bit << 3;
-        flag_bit >> 3
+        flag_bit.unsigned_shr(1).unsigned_shl(3).unsigned_shr(3)
     }
 
 }
