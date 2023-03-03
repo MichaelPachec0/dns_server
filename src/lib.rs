@@ -35,9 +35,9 @@ struct DNSHeader {
     id: [u8; 2],
     // might make this another struct
     flags: Flags,
-    qdcount: [u8; 2],
-    ancount: [u8; 2],
-    arcount: [u8; 2],
+    qd_count: [u8; 2],
+    an_count: [u8; 2],
+    ar_count: [u8; 2],
 }
 
 enum QRBit {
@@ -48,11 +48,11 @@ enum QRBit {
 struct Flags {
     dns_type: QRBit,
     opcode: Opcode,
-    truncated: bool,
-    recursion: bool,
+    is_truncated: bool,
+    is_recursive: bool,
     // reserved <- bit
-    ad_bit: bool,
-    non_auth: bool,
+    ad_bit_enabled: bool,
+    non_auth_enabled: bool,
 }
 
 #[derive(FromPrimitive)]
@@ -76,16 +76,17 @@ enum Opcode {
 impl Flags {
     // TODO: Custom Error (possibly use anyhow?), or leave as string?
     fn new(flags: &[u8]) -> Result<Self, String> {
-        let up_opcode = Flags::format_opcode(&flags[0]);
+        let flag = *flags.first().ok_or_else(|| format!("Invalid flag slice! {flags:?}"))?;
+        let up_opcode = format_opcode(flag);
         //Iterates through possible bit values that Opcode can be,
         let opcode = (0..15)
             .into_iter()
             .rev()
-            .find(|&val| bitflags_check(val, &up_opcode))
+            .find(|&val| bitflags_check(val, up_opcode))
             .and_then(Opcode::from_u8)
             // TODO: Decide if multiple conditions are necessary, or if an optional is better.
             .ok_or_else(|| format!("DNS_TYPE: INVALID TYPE: {up_opcode}, AS BITS: {up_opcode:08b}"))?;
-        let dns_type = if bitflags_check(0, &flags[0]) {
+        let dns_type = if bitflags_check(0, flag) {
             QRBit::Response
         } else {
             QRBit::Query
@@ -93,19 +94,23 @@ impl Flags {
         Ok(Self {
             dns_type,
             opcode,
-            truncated: bitflags_check(6, &flags[0]),
-            recursion: bitflags_check(7, &flags[0]),
-            ad_bit: false,
-            non_auth: false,
+            non_auth_enabled: bitflags_check(5, flag),
+            is_truncated: bitflags_check(6, flag),
+            is_recursive: bitflags_check(7, flag),
+            ad_bit_enabled: bitflags_check(8, flag),
         })
-    }
-    // truncates the first bit and the last 3 bits, this way we only have the opcode bits
-    fn format_opcode(flag_bit: &u8) -> u8 {
-        flag_bit.unsigned_shr(1).unsigned_shl(3).unsigned_shr(3)
     }
 
 }
-fn bitflags_check(bit: u8, bits: &u8) -> bool {
+
+// truncates the first bit and the last 3 bits, this way we only have the opcode bits
+#[inline]
+fn format_opcode(flag_bit: u8) -> u8 {
+    flag_bit.unsigned_shr(1).unsigned_shl(3).unsigned_shr(3)
+}
+
+#[inline]
+fn bitflags_check(bit: u8, bits: u8) -> bool {
     (bits & (1 << bit)) == 1
 }
 
@@ -117,6 +122,6 @@ mod tests{
         let bits = 1;
         let bit = 0;
         let x: Option<&str> = None;
-        assert!(bitflags_check(bit, &bits), "Function does not work");
+        assert!(bitflags_check(bit, bits), "Function does not work");
     }
 }
